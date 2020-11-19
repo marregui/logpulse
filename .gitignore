@@ -10,3 +10,4 @@ gradlew.bat
 *.iws
 logpulse-store
 logpulse.log
+.idea
