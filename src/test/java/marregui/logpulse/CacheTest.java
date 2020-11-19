@@ -103,8 +103,7 @@ public class CacheTest {
         assertThat(cacheLine.get(0).toString(),
                 is("127.0.0.1 - admin [10/11/2020:16:00:00 +0000] \"GET /resources/index.php HTTP/2.0\" 200 2020"));
         logLines.stream()
-                .map(WithUTCTimestamp::getUTCTimestamp)
-                .map(UTCTimestamp::truncateMillis)
+                .map(clf -> Long.valueOf(UTCTimestamp.truncateMillis(clf.getUTCTimestamp())))
                 .distinct()
                 .skip(1)
                 .forEach(ts -> {

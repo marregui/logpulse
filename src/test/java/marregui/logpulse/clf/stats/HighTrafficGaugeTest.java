@@ -154,7 +154,6 @@ public class HighTrafficGaugeTest {
             int s = sizes[i];
             sum += s;
             ravg = sum / (i + 1.0);
-            System.out.printf("avg: %.2f, sum: %d%n", ravg, sum);
         }
         assertThat(avg, is(ravg));
     }

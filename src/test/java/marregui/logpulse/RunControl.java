@@ -84,8 +84,8 @@ public class RunControl implements PeriodicSchedule<CLF> {
             assertThat(t, lessThanOrEqualTo(periodSecs));
             linesRead += size;
             bytesRead += events.stream()
-                    .map(CLF::getBytes)
-                    .reduce(Long::sum).orElse(0L);
+                    .map(clf -> Long.valueOf(clf.getBytes()))
+                    .reduce((a, b) -> Long.valueOf(a + b)).orElse(Long.valueOf(0L));
             if (!alarmBytesThresholdCrossed && bytesRead >= alarmBytesThreshold) {
                 alarmBytesThresholdCrossed = true;
                 alarmToGoOff.countDown();

@@ -104,7 +104,9 @@ public final class Store {
                 count++;
             }
             System.out.printf("Stored %d lines, from: %s, to: %s%n",
-                    count, UTCTimestamp.formatForDisplay(startTs), UTCTimestamp.formatForDisplay(endTs));
+                    Long.valueOf(count),
+                    UTCTimestamp.formatForDisplay(startTs),
+                    UTCTimestamp.formatForDisplay(endTs));
             return count;
         }
     }
