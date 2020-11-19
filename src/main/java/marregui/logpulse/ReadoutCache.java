@@ -118,7 +118,6 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
      * The cache's order is not guaranteed, as the entry
      * is simply appended. Use several calls to this method
      *
-     *
      * @param entry to be added to the cache
      */
     public void add(T entry) {
@@ -148,9 +147,7 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
                 startTs = Math.min(startTs, timestampAt(newEntries, 0));
             } finally {
                 writeLock.unlock();
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Added {} entries", Integer.valueOf(newEntries.size()));
-                }
+                LOGGER.debug("Added {} entries", Integer.valueOf(newEntries.size()));
             }
         }
     }
@@ -179,14 +176,12 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
         } finally {
             readLock.unlock();
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Fetch count: {}, from: {} to: {}, startIdx: {}, endIdx (inclusive): {}",
-                    Integer.valueOf(cacheLine.size()),
-                    UTCTimestamp.formatForDisplay(periodStart),
-                    UTCTimestamp.formatForDisplay(periodEnd),
-                    Integer.valueOf(startIdx),
-                    Integer.valueOf(endIdx));
-        }
+        LOGGER.debug("Fetch count: {}, from: {} to: {}, startIdx: {}, endIdx (inclusive): {}",
+                Integer.valueOf(cacheLine.size()),
+                UTCTimestamp.formatForDisplay(periodStart),
+                UTCTimestamp.formatForDisplay(periodEnd),
+                Integer.valueOf(startIdx),
+                Integer.valueOf(endIdx));
         return cacheLine;
 
     }
@@ -204,12 +199,10 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
         } finally {
             writeLock.unlock();
         }
-        if (LOGGER.isDebugEnabled()) {
-            if (size > 0) {
-                LOGGER.debug("Fully evicted");
-            } else {
-                LOGGER.debug("Cache is ready");
-            }
+        if (size > 0) {
+            LOGGER.debug("Fully evicted");
+        } else {
+            LOGGER.debug("Cache is ready");
         }
     }
 
@@ -233,15 +226,13 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
             size = entries.size();
         } finally {
             writeLock.unlock();
-            if (LOGGER.isDebugEnabled()) {
-                if (size > 0) {
-                    LOGGER.debug("Evicted count: {}, prev. size: {}, current size: {}",
-                            Integer.valueOf(count),
-                            Integer.valueOf(size + count),
-                            Integer.valueOf(size));
-                } else {
-                    LOGGER.debug("Fully evicted");
-                }
+            if (size > 0) {
+                LOGGER.debug("Evicted count: {}, prev. size: {}, current size: {}",
+                        Integer.valueOf(count),
+                        Integer.valueOf(size + count),
+                        Integer.valueOf(size));
+            } else {
+                LOGGER.debug("Fully evicted");
             }
         }
     }

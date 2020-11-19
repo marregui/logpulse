@@ -266,9 +266,7 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
             for (WatchEvent<?> event : key.pollEvents()) {
                 if (fileReadoutHandler.fileMatches((Path) event.context())) {
                     String fileEventKind = event.kind().name();
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("File event: {}", fileEventKind);
-                    }
+                    LOGGER.debug("File event: {}", fileEventKind);
                     switch (WatchEventKind.kindOf(fileEventKind)) {
                         case ENTRY_CREATE -> processTask(() -> {
                             try {
@@ -353,6 +351,6 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
     }
 
     private static boolean folderIsNotAccessible(Path folder) {
-        return !Files.exists(folder) || !Files.isDirectory(folder) ||!Files.isExecutable(folder);
+        return !Files.exists(folder) || !Files.isDirectory(folder) || !Files.isExecutable(folder);
     }
 }

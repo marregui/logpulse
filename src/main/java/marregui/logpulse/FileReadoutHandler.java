@@ -61,6 +61,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
 
     /**
      * Constructor.
+     *
      * @param file source file
      */
     public FileReadoutHandler(Path file) {
@@ -107,24 +108,21 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
      */
     public void moveToStart() {
         fileReadOffset = 0L;
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Moved to start at offset: {}", Long.valueOf(fileReadOffset));
-        }
+        LOGGER.debug("Moved to start at offset: {}", Long.valueOf(fileReadOffset));
     }
 
     /**
      * Moves the file's last read offset to the end (file size), if the
      * file exists, otherwise to offset 0L.
+     *
      * @return true if the file exists
      */
     public boolean moveToEnd() {
         try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), FILE_ACCESS_MODE)) {
             fileReadOffset = raf.length();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Moved to end at offset: {}", Long.valueOf(fileReadOffset));
-            }
+            LOGGER.debug("Moved to end at offset: {}", Long.valueOf(fileReadOffset));
             return true;
-        } catch (IOException  e) {
+        } catch (IOException e) {
             fileReadOffset = 0L;
             LOGGER.info("File does not exist yet, setting offset to 0L");
             return false;
@@ -159,6 +157,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
      * parsed line. The next call of this method will resume from the 'failed' line.
      * This mechanism gives the parser the opportunity to throttle the readout
      * process.
+     *
      * @param readoutCache readout cache where successfully parsed lines are added to
      * @return the number of lines added to the readout cache, which implies
      * successfully parsed
@@ -176,21 +175,17 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
             long bufferSize = fileSize - fileReadOffset;
             MappedByteBuffer mappedBuffer = channel.map(MapMode.READ_ONLY, fileReadOffset, bufferSize);
             int lineStartOffset = 0;
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Reading {} additional bytes from offset {}",
-                        Long.valueOf(bufferSize), Long.valueOf(fileReadOffset));
-            }
+            LOGGER.debug("Reading {} additional bytes from offset {}",
+                    Long.valueOf(bufferSize), Long.valueOf(fileReadOffset));
             for (int i = 0; i < mappedBuffer.limit(); i++) {
                 if (mappedBuffer.get(i) == LINE_BREAK) {
                     if (lineStartOffset != i) {
                         int lineLength = i - lineStartOffset;
                         if (lineLength > lineBuffer.length) {
                             int newLineBufferSize = (int) Math.ceil(lineLength * 1.5f);
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug("Resizing buffer from {} to {}",
-                                        Integer.valueOf(lineBuffer.length),
-                                        Integer.valueOf(newLineBufferSize));
-                            }
+                            LOGGER.debug("Resizing buffer from {} to {}",
+                                    Integer.valueOf(lineBuffer.length),
+                                    Integer.valueOf(newLineBufferSize));
                             lineBuffer = new byte[newLineBufferSize];
                         }
                         mappedBuffer.position(lineStartOffset);
@@ -202,9 +197,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
                         try {
                             LINE_TYPE parsed = parseLine(line);
                             if (parsed == null) {
-                                if (LOGGER.isDebugEnabled()) {
-                                    LOGGER.debug("Interrupting readout, read null");
-                                }
+                                LOGGER.debug("Interrupting readout, read null");
                                 break;
                             } else {
                                 readoutCache.add(parsed);
@@ -223,9 +216,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
             throw new IllegalStateException("cannot access file: " + file, e);
         }
         if (addedLinesCount > 0) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Loaded count: {}", Integer.valueOf(addedLinesCount));
-            }
+            LOGGER.debug("Loaded count: {}", Integer.valueOf(addedLinesCount));
         }
         return addedLinesCount;
     }

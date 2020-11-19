@@ -115,7 +115,7 @@ public class SchedulesProcessor<T extends WithUTCTimestamp> extends TaskProcesso
             if (isEvictTick) {
                 lastEvictTick = ticks;
             }
-            if (LOGGER.isDebugEnabled() && cacheHasData) {
+            if (cacheHasData) {
                 long headTs = readoutCache.firstTimestamp();
                 LOGGER.debug("Ready count: {}, tick: {}, evictPeriodSecs: {}, evict: {}, timestamp at head of cache: {}",
                         Integer.valueOf(readyCount),
@@ -132,9 +132,7 @@ public class SchedulesProcessor<T extends WithUTCTimestamp> extends TaskProcesso
                     long endTs = schedulePeriodEnd(schedule, startTs);
                     List<T> scheduleEvents = startTs != ReadoutCache.NO_VALUE ?
                             readoutCache.fetch(startTs, endTs) : Collections.emptyList();
-                    if (LOGGER.isDebugEnabled()) {
-                        logSchedule(schedule, startTs, endTs, scheduleEvents, ticks);
-                    }
+                    logSchedule(schedule, startTs, endTs, scheduleEvents, ticks);
                     if (!isRunning()) {
                         throw new IllegalStateException("not running");
                     }
