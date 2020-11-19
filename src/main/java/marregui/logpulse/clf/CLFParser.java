@@ -201,7 +201,11 @@ public final class CLFParser {
                 if (openDelimiter != logLine.charAt(offset)) {
                     throw new IllegalArgumentException(String.format(
                             "parsing [%s] offset:%d, expected:%c, found:%c, logLine: %s",
-                            this, offset, openDelimiter, logLine.charAt(offset), logLine));
+                            this,
+                            Integer.valueOf(offset),
+                            Character.valueOf(openDelimiter),
+                            Character.valueOf(logLine.charAt(offset)),
+                            logLine));
                 }
                 i++;
             }
@@ -215,7 +219,11 @@ public final class CLFParser {
                 if (closeDelimiter != logLine.charAt(i)) {
                     throw new IllegalArgumentException(String.format(
                             "parsing [%s] offset:%d, expected:%c, found:%c, logLine:%s",
-                            this, i, closeDelimiter, logLine.charAt(i), logLine));
+                            this,
+                            Integer.valueOf(i),
+                            Character.valueOf(closeDelimiter),
+                            Character.valueOf(logLine.charAt(i)),
+                            logLine));
                 }
             }
             return closeDelimiter == SPACE_DELIM ? i : i + 1;

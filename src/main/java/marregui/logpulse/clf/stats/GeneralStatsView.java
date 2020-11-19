@@ -103,7 +103,10 @@ public class GeneralStatsView extends GeneralStats {
         sb.append("To: ").append(UTCTimestamp.formatForDisplay(getLastSeenUTCTimestamp())).append(LINE_END);
         long count = getLogsCount();
         sb.append("Count: ").append(count).append(LINE_END);
-        sb.append(String.format("Logs per second: %.2f", 1.0 * count / getPeriodSecs())).append(LINE_END);
+        sb.append(String.format(
+                "Logs per second: %.2f",
+                Double.valueOf(1.0 * count / getPeriodSecs()))
+        ).append(LINE_END);
     }
 
     private static void append(StringBuilder sb, String title, Collection<Map.Entry<?, AtomicLong>> entries) {
@@ -135,10 +138,12 @@ public class GeneralStatsView extends GeneralStats {
 
     private static String toHumanReadableSize(double byteCount) {
         if (byteCount < 1024.0) {
-            return String.format("%.2fB", byteCount);
+            return String.format("%.2fB", Double.valueOf(byteCount));
         }
         int step = (int) (log(byteCount) / log(2)) / 10;
         double size = byteCount / (2 << (10 * step - 1));
-        return String.format("%.2f%cB", size, SCALE[step]);
+        return String.format("%.2f%cB",
+                Double.valueOf(size),
+                Character.valueOf(SCALE[step]));
     }
 }

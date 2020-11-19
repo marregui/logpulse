@@ -73,7 +73,7 @@ public final class UTCTimestamp {
      * @return formatted with "dd/MMMM/yyyy:HH:mm:ss Z"
      */
     public static String format(long ts) {
-        return DATETIME_OUT.format(ts);
+        return DATETIME_OUT.format(Long.valueOf(ts));
     }
 
     /**

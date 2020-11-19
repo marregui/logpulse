@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -78,14 +77,14 @@ public class SchedulesProcessor<T extends WithUTCTimestamp> extends TaskProcesso
     public void setPeriodicSchedule(PeriodicSchedule<T> schedule) {
         if (schedule.getPeriodSecs() <= 0) {
             LOGGER.error("Bluntly ignoring schedule {} with period {} secs",
-                    schedule.getName(), schedule.getPeriodSecs());
+                    schedule.getName(), Integer.valueOf(schedule.getPeriodSecs()));
         }
         LOGGER.info("Schedule set: {}, period secs: {}",
-                schedule.getName(), schedule.getPeriodSecs());
+                schedule.getName(), Integer.valueOf(schedule.getPeriodSecs()));
         schedulesLock.lock();
         try {
             schedules.add(schedule);
-            schedules.sort(Comparator.comparing(PeriodicSchedule::getPeriodSecs));
+            schedules.sort(PeriodicSchedule.COMPARING);
         } finally {
             schedulesLock.unlock();
         }
@@ -119,7 +118,11 @@ public class SchedulesProcessor<T extends WithUTCTimestamp> extends TaskProcesso
             if (LOGGER.isDebugEnabled() && cacheHasData) {
                 long headTs = readoutCache.firstTimestamp();
                 LOGGER.debug("Ready count: {}, tick: {}, evictPeriodSecs: {}, evict: {}, timestamp at head of cache: {}",
-                        readyCount, ticks, cacheEvictingSchedule.getPeriodSecs(), isEvictTick, UTCTimestamp.formatForDisplay(headTs));
+                        Integer.valueOf(readyCount),
+                        Long.valueOf(ticks),
+                        Integer.valueOf(cacheEvictingSchedule.getPeriodSecs()),
+                        Boolean.valueOf(isEvictTick),
+                        UTCTimestamp.formatForDisplay(headTs));
             }
             for (PeriodicSchedule<T> schedule : schedules) {
                 if (schedule.isInSchedule(ticks)) {
@@ -175,8 +178,8 @@ public class SchedulesProcessor<T extends WithUTCTimestamp> extends TaskProcesso
         if (!events.isEmpty()) {
             LOGGER.debug("!! Schedule: {}, event count: {}, tick: {}, start: {}, end: {}",
                     schedule.getName(),
-                    events.size(),
-                    ticks,
+                    Integer.valueOf(events.size()),
+                    Long.valueOf(ticks),
                     UTCTimestamp.formatForDisplay(startTs),
                     UTCTimestamp.formatForDisplay(endTs));
         } else {
@@ -185,8 +188,8 @@ public class SchedulesProcessor<T extends WithUTCTimestamp> extends TaskProcesso
             long e = endTs != ReadoutCache.NO_VALUE ? endTs : now;
             LOGGER.debug("!! Schedule: {}, tick: {}, event count: {}, start: {}, end: {}",
                     schedule.getName(),
-                    ticks,
-                    events.size(),
+                    Long.valueOf(ticks),
+                    Integer.valueOf(events.size()),
                     UTCTimestamp.formatForDisplay(s),
                     UTCTimestamp.formatForDisplay(e));
         }

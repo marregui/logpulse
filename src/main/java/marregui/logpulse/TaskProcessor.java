@@ -57,7 +57,7 @@ public class TaskProcessor {
             thread.setName(String.format(
                     "%s%s",
                     TaskProcessor.this.getClass().getSimpleName(),
-                    threadId.getAndIncrement()));
+                    Integer.valueOf(threadId.getAndIncrement())));
             return thread;
         };
         runningTasksCount = new AtomicInteger();
@@ -92,7 +92,9 @@ public class TaskProcessor {
             throw new IllegalStateException("already running");
         }
         executor = Executors.newFixedThreadPool(numThreads, threadFactory);
-        LOGGER.info("{} Started [numThreads: {}]", getClass().getSimpleName(), numThreads);
+        LOGGER.info("{} Started [numThreads: {}]",
+                getClass().getSimpleName(),
+                Integer.valueOf(numThreads));
     }
 
     /**

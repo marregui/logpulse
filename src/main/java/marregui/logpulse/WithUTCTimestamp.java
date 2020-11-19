@@ -25,7 +25,8 @@ public interface WithUTCTimestamp {
     /**
      * Comparator to sort lists of implementors, smaller to greater
      */
-    Comparator<WithUTCTimestamp> COMPARING = (ts1, ts2) -> Long.compare(ts1.getUTCTimestamp(), ts2.getUTCTimestamp());
+    Comparator<WithUTCTimestamp> COMPARING =
+            Comparator.comparingLong(WithUTCTimestamp::getUTCTimestamp);
 
     /**
      * @return a UTC Epoch

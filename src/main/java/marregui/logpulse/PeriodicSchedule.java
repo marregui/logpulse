@@ -16,6 +16,7 @@
 package marregui.logpulse;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -31,6 +32,12 @@ import java.util.stream.IntStream;
  * @see WithUTCTimestamp
  */
 public interface PeriodicSchedule<T extends WithUTCTimestamp> {
+
+    /**
+     * Comparator to sort lists of implementors, smaller to greater
+     */
+    Comparator<PeriodicSchedule<? extends WithUTCTimestamp>> COMPARING =
+            Comparator.comparingLong(PeriodicSchedule::getPeriodSecs);
 
     /**
      * @return name to identify the schedule

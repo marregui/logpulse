@@ -83,7 +83,8 @@ public class HighTrafficGauge implements PeriodicSchedule<CLF> {
 
     @Override
     public String getName() {
-        return String.format("High Traffic Gauge (%.2f req. per sec.)", requestsPerSecOnAvgThreshold);
+        return String.format("High Traffic Gauge (%.2f req. per sec.)",
+                Double.valueOf(requestsPerSecOnAvgThreshold));
     }
 
     @Override
@@ -136,6 +137,10 @@ public class HighTrafficGauge implements PeriodicSchedule<CLF> {
 
     private String buildReport(String message, int hits, double avg, long ts) {
         return String.format("%s: %s - hits = {%d}, avg: %.2f, triggered: {%s}%n",
-                getName(), message, hits, avg, UTCTimestamp.formatForDisplay(ts));
+                getName(),
+                message,
+                Integer.valueOf(hits),
+                Double.valueOf(avg),
+                UTCTimestamp.formatForDisplay(ts));
     }
 }

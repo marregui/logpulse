@@ -18,7 +18,6 @@ package marregui.logpulse.clf;
 import marregui.logpulse.WithUTCTimestamp;
 import marregui.logpulse.UTCTimestamp;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -198,12 +197,13 @@ public class CLF implements WithUTCTimestamp {
      */
     @Override
     public String toString() {
-        return new String(String.format(
+        return String.format(
                 "%s %s %s [%s] \"%s %s HTTP/%s\" %d %d",
                 host, ident, authUser,
                 UTCTimestamp.format(timestamp),
                 method, resource, version,
-                status, bytes).getBytes(), StandardCharsets.UTF_8);
+                Integer.valueOf(status),
+                Long.valueOf(bytes));
     }
 
     /**
