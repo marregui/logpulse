@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
 /**
  * Instances of this class use the OS's file watching service to detect
@@ -73,9 +71,6 @@ import java.util.function.Function;
 public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Scheduler.class);
-    private static final List<Function<Path, Boolean>> PARENT_FOLDER_ATTRS = Arrays.asList(
-            Files::exists, Files::isDirectory, Files::isReadable, Files::isExecutable
-    );
 
     // this is what the WatchService reacts to with a frequency of approx 1 second
     private static final WatchEvent.Kind<?>[] WATCH_EVENTS = {
@@ -106,7 +101,6 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
     private WatchService watchService;
     private WatchKey watchedFolderKey;
     private Future<?> schedulerThreadHandle;
-    private final AtomicBoolean dataAvailable;
 
     /**
      * Constructor.
@@ -150,7 +144,6 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
         readoutCache = new ReadoutCache<>();
         this.readFileFromTheStart = readFileFromTheStart;
         schedulesProcessor = new SchedulesProcessor<>(1, readoutCache, threadsAreDaemons);
-        dataAvailable = new AtomicBoolean();
     }
 
     /**
@@ -193,12 +186,9 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
      *         in parallel with the 'scheduler' thread. The 'readout' thread is only
      *         'waited' for by the 'scheduler' for the time difference between 1 second,
      *         and whatever time it took the poll system call to return (in the case there
-     *         are events). This time is adjusted dynamically at runtime to allow a window
-     *         for 'readout', 10L millis to start. In addition, if the file does not exist,
+     *         are events). If the file does not exist,
      *         there is a propagation delay from the time it is created to the time it is
      *         cached and ready for use by the Scheduler.
-     *         These two delays add up to make the Scheduler soft real time, it will always
-     *         be looking at the events within the file after the fact by some delta.
      *     </li>
      *     <li>Execute schedules: Schedules are processed by a single threaded executor
      *     ('schedules-processor' thread) to ensure they are triggered serially, asynchronously
@@ -227,7 +217,6 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
     public void run() {
         LOGGER.info("Starts");
         long ticks = 1L;
-        dataAvailable.set(false);
         LOGGER.info("Read file from start: {}", readFileFromTheStart ? "Yes" : "No");
         if (!readFileFromTheStart && fileReadoutHandler.getFileReadOffset() == 0) {
             boolean fileExists = fileReadoutHandler.moveToEnd();
@@ -235,16 +224,15 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
                 LOGGER.info("Alerts will start as soon as there is data available");
             }
         }
-        long timeAdjustment = 10L;
         while (!Thread.currentThread().isInterrupted() && isRunning()) {
             try {
                 long startTs = System.currentTimeMillis();
-                WatchKey key = watchService.poll(1000L - timeAdjustment, TimeUnit.MILLISECONDS);
+                WatchKey key = watchService.poll(1000L, TimeUnit.MILLISECONDS);
                 if (key != null) {
                     processEvents(key);
                 }
-                timeAdjustment = maybeWaitToCompleteOneSecond(startTs, timeAdjustment);
-                if (dataAvailable.get()) {
+                maybeWaitToCompleteOneSecond(startTs);
+                if (!readoutCache.isEmpty()) {
                     schedulesProcessor.processSchedules(ticks);
                     ticks++;
                 }
@@ -265,17 +253,12 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
         stop();
     }
 
-    private static long maybeWaitToCompleteOneSecond(long startTs, long adjustment) throws InterruptedException {
+    private static void maybeWaitToCompleteOneSecond(long startTs) throws InterruptedException {
         long elapsed = System.currentTimeMillis() - startTs;
-        long newAdjustment = adjustment;
         if (elapsed < 1000L) {
             long wait = 1000L - elapsed - 1L;
-            newAdjustment -= 2L;
             TimeUnit.MILLISECONDS.sleep(wait);
-        } else if (elapsed > 1000L) {
-            newAdjustment += (elapsed - 1000L);
         }
-        return newAdjustment;
     }
 
     private void processEvents(WatchKey key) {
@@ -291,8 +274,7 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
                             try {
                                 readoutCache.fullyEvict();
                                 fileReadoutHandler.moveToStart();
-                                readoutCache.addAll(fileReadoutHandler.fetchAvailableLines());
-                                dataAvailable.set(readoutCache.size() > 0);
+                                fileReadoutHandler.fetchAvailableLines(readoutCache);
                             } catch (IOException e) {
                                 LOGGER.error("Cannot read: " + fileReadoutHandler.getFile(), e);
                             }
@@ -300,12 +282,10 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
                         case ENTRY_DELETE -> {
                             readoutCache.fullyEvict();
                             fileReadoutHandler.moveToStart();
-                            dataAvailable.set(false);
                         }
                         case ENTRY_MODIFY -> processTask(() -> {
                             try {
-                                readoutCache.addAll(fileReadoutHandler.fetchAvailableLines());
-                                dataAvailable.compareAndSet(false, readoutCache.size() > 0);
+                                fileReadoutHandler.fetchAvailableLines(readoutCache);
                             } catch (IOException e) {
                                 LOGGER.error("Cannot read: " + fileReadoutHandler.getFile(), e);
                             }
@@ -373,6 +353,6 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
     }
 
     private static boolean folderIsNotAccessible(Path folder) {
-        return !PARENT_FOLDER_ATTRS.stream().allMatch(attr -> attr.apply(folder));
+        return !Files.exists(folder) || !Files.isDirectory(folder) ||!Files.isExecutable(folder);
     }
 }

@@ -15,10 +15,18 @@
  */
 package marregui.logpulse;
 
+import java.util.Comparator;
+
 /**
  * Implementors contain an accessor method for a UTC Epoch.
  */
 public interface WithUTCTimestamp {
+
+    /**
+     * Comparator to sort lists of implementors, smaller to greater
+     */
+    Comparator<WithUTCTimestamp> COMPARING = (ts1, ts2) -> Long.compare(ts1.getUTCTimestamp(), ts2.getUTCTimestamp());
+
     /**
      * @return a UTC Epoch
      */

@@ -114,16 +114,34 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
     }
 
     /**
+     * Adds the entry to the cache.
+     * The cache's order is not guaranteed, as the entry
+     * is simply appended. Use several calls to this method
+     *
+     *
+     * @param entry to be added to the cache
+     */
+    public void add(T entry) {
+        if (entry != null) {
+            writeLock.lock();
+            try {
+                entries.add(entry);
+                entries.sort(WithUTCTimestamp.COMPARING);
+                startTs = Math.min(startTs, entry.getUTCTimestamp());
+            } finally {
+                writeLock.unlock();
+            }
+        }
+    }
+
+    /**
      * Adds the entries to the cache.
      *
      * @param newEntries to be added to the cache
      */
     public void addAll(List<T> newEntries) {
         if (newEntries != null && !newEntries.isEmpty()) {
-            // newEntries should already be sorted, the readout handler does it
-            // but we do rely on this invariant to be true, so we sort just in
-            // case, which should O(N)
-            newEntries.sort(Comparator.comparing(WithUTCTimestamp::getUTCTimestamp));
+            newEntries.sort(WithUTCTimestamp.COMPARING);
             writeLock.lock();
             try {
                 entries.addAll(newEntries);
@@ -131,7 +149,7 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
             } finally {
                 writeLock.unlock();
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Added {} entries", newEntries.size());
+                    LOGGER.debug("Added {} entries", Integer.valueOf(newEntries.size()));
                 }
             }
         }
@@ -163,10 +181,11 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Fetch count: {}, from: {} to: {}, startIdx: {}, endIdx (inclusive): {}",
-                    cacheLine.size(),
+                    Integer.valueOf(cacheLine.size()),
                     UTCTimestamp.formatForDisplay(periodStart),
                     UTCTimestamp.formatForDisplay(periodEnd),
-                    startIdx, endIdx);
+                    Integer.valueOf(startIdx),
+                    Integer.valueOf(endIdx));
         }
         return cacheLine;
 
@@ -215,9 +234,11 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
         } finally {
             writeLock.unlock();
             if (LOGGER.isDebugEnabled()) {
-                if (size > 0 ) {
+                if (size > 0) {
                     LOGGER.debug("Evicted count: {}, prev. size: {}, current size: {}",
-                            count, size + count, size);
+                            Integer.valueOf(count),
+                            Integer.valueOf(size + count),
+                            Integer.valueOf(size));
                 } else {
                     LOGGER.debug("Fully evicted");
                 }

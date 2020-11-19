@@ -35,9 +35,9 @@ import static java.nio.channels.FileChannel.MapMode;
  * in UTF-8 encoding represent log lines of some format that encapsulates a
  * timestamp.
  * <p>
- * The readout method {@linkplain #fetchAvailableLines()} reads all available
- * lines in the file since the last time the method was called. The file is
- * read from 'fileReadOffset' to 'fileSize'.
+ * The readout method {@linkplain #fetchAvailableLines(ReadoutCache)}
+ * reads all available lines in the file since the last time the method was called.
+ * The file is read from 'fileReadOffset' to 'fileSize'.
  * <p>
  * Two methods are provided to change the offset the file is read from
  * {@linkplain #moveToStart()} and {@linkplain #moveToEnd()}.
@@ -53,12 +53,10 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
     private static final byte CARRIAGE_RETURN = '\r';
     private static final byte LINE_BREAK = '\n';
     private static final int LINE_BUFFER_SIZE = 512; // tune to average log size
-    private static final int LINES_FETCH_LIST_START_SIZE = 10;
 
     private final Path parentFolder;
     private final Path file;
     private long fileReadOffset;
-    private int linesFetchListApproxSize;
     private byte[] lineBuffer;
 
     /**
@@ -69,7 +67,6 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
         parentFolder = Objects.requireNonNull(file).getParent();
         this.file = file;
         lineBuffer = new byte[LINE_BUFFER_SIZE];
-        linesFetchListApproxSize = LINES_FETCH_LIST_START_SIZE;
     }
 
     /**
@@ -111,7 +108,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
     public void moveToStart() {
         fileReadOffset = 0L;
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Moved to start at offset: {}", fileReadOffset);
+            LOGGER.debug("Moved to start at offset: {}", Long.valueOf(fileReadOffset));
         }
     }
 
@@ -124,7 +121,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
         try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), FILE_ACCESS_MODE)) {
             fileReadOffset = raf.length();
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Moved to end at offset: {}", fileReadOffset);
+                LOGGER.debug("Moved to end at offset: {}", Long.valueOf(fileReadOffset));
             }
             return true;
         } catch (IOException  e) {
@@ -138,7 +135,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
      * Parsing method.
      * <p>
      * If it returns null, line will be parsed again in the next run of
-     * {@linkplain #fetchAvailableLines()}.
+     * {@linkplain #fetchAvailableLines(ReadoutCache)}.
      * <p>
      * If parsing should fail, an {@link IllegalArgumentException} is
      * expected is preferred to be thrown.
@@ -154,7 +151,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
      * (from the last read offset until the end of the file). This mapping is
      * split it into '\n' delimited blocks, which are UTF-8 decoded and fed
      * to a line parser one at the time. The result of this process is collected
-     * into the return list.
+     * into the readout cache.
      * <p>
      * Lines that fail to parse are ignored (a message is logged).
      * <p>
@@ -162,24 +159,26 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
      * parsed line. The next call of this method will resume from the 'failed' line.
      * This mechanism gives the parser the opportunity to throttle the readout
      * process.
-     * @return The list of available parsed lines (can be empty, but never null)
+     * @param readoutCache readout cache where successfully parsed lines are added to
+     * @return the number of lines added to the readout cache, which implies
+     * successfully parsed
      * @throws IOException when the file cannot be read/mapped
      */
-    public List<LINE_TYPE> fetchAvailableLines() throws IOException {
-        List<LINE_TYPE> lines = Collections.emptyList();
+    public int fetchAvailableLines(ReadoutCache<LINE_TYPE> readoutCache) throws IOException {
+        int addedLinesCount = 0;
         try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), FILE_ACCESS_MODE);
              FileChannel channel = raf.getChannel()) {
             long fileSize = raf.length();
             if (fileSize <= fileReadOffset) {
                 fileReadOffset = fileSize;
-                return lines;
+                return addedLinesCount;
             }
             long bufferSize = fileSize - fileReadOffset;
             MappedByteBuffer mappedBuffer = channel.map(MapMode.READ_ONLY, fileReadOffset, bufferSize);
-            lines = new ArrayList<>(linesFetchListApproxSize);
             int lineStartOffset = 0;
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Reading {} additional bytes from offset {}", bufferSize, fileReadOffset);
+                LOGGER.debug("Reading {} additional bytes from offset {}",
+                        Long.valueOf(bufferSize), Long.valueOf(fileReadOffset));
             }
             for (int i = 0; i < mappedBuffer.limit(); i++) {
                 if (mappedBuffer.get(i) == LINE_BREAK) {
@@ -189,7 +188,8 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
                             int newLineBufferSize = (int) Math.ceil(lineLength * 1.5f);
                             if (LOGGER.isDebugEnabled()) {
                                 LOGGER.debug("Resizing buffer from {} to {}",
-                                        lineBuffer.length, newLineBufferSize);
+                                        Integer.valueOf(lineBuffer.length),
+                                        Integer.valueOf(newLineBufferSize));
                             }
                             lineBuffer = new byte[newLineBufferSize];
                         }
@@ -207,11 +207,12 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
                                 }
                                 break;
                             } else {
-                                lines.add(parsed);
+                                readoutCache.add(parsed);
+                                addedLinesCount++;
                             }
                         } catch (Exception e) {
                             LOGGER.warn("Ignoring malformed line found at offset {}: {}",
-                                    fileReadOffset + lineStartOffset, line);
+                                    Long.valueOf(fileReadOffset + lineStartOffset), line);
                         }
                     }
                     lineStartOffset = i + 1;
@@ -221,19 +222,11 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
         } catch (FileNotFoundException e) {
             throw new IllegalStateException("cannot access file: " + file, e);
         }
-        if (!lines.isEmpty()) {
-            linesFetchListApproxSize = Math.max(linesFetchListApproxSize, lines.size());
-            lines.sort(Comparator.comparing(WithUTCTimestamp::getUTCTimestamp));
+        if (addedLinesCount > 0) {
             if (LOGGER.isDebugEnabled()) {
-                int size = lines.size();
-                long startTs = lines.get(0).getUTCTimestamp();
-                long endTs = lines.get(size - 1).getUTCTimestamp();
-                LOGGER.debug("Loaded count: {}, from: {}, to: {}",
-                        size,
-                        UTCTimestamp.formatForDisplay(startTs),
-                        UTCTimestamp.formatForDisplay(endTs));
+                LOGGER.debug("Loaded count: {}", Integer.valueOf(addedLinesCount));
             }
         }
-        return lines;
+        return addedLinesCount;
     }
 }

@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -66,10 +65,9 @@ public class FileReadoutHandlerTest {
             int consecutiveNothingReadCount = 0;
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    List<CLF> lines = readoutHandler.fetchAvailableLines();
-                    if (!lines.isEmpty()) {
-                        loadedLogLines.addAll(lines);
-                        totalLogLinesRead.addAndGet(lines.size());
+                    int linesCount = readoutHandler.fetchAvailableLines(loadedLogLines);
+                    if (linesCount > 0) {
+                        totalLogLinesRead.addAndGet(linesCount);
                         consecutiveNothingReadCount = 0;
                     } else {
                         consecutiveNothingReadCount++;
@@ -103,9 +101,11 @@ public class FileReadoutHandlerTest {
             System.out.println("Total millis: " + elapsedTs);
             assertThat(totalLogLinesWritten.get(), is(totalLogLinesRead.get()));
             assertThat(totalLogLinesRead.get(), is(maxLogs));
-            int fileSize = new CLFReadoutHandler(file).fetchAvailableLines().size();
+            ReadoutCache<CLF> readoutCache = new ReadoutCache<>();
+            int fileSize = new CLFReadoutHandler(file).fetchAvailableLines(readoutCache);
             assertThat(fileSize, is(loadedLogLines.size()));
             assertThat(fileSize, is((int) maxLogs));
+            assertThat(fileSize, is(readoutCache.size()));
         } finally {
             Files.deleteIfExists(file);
         }
