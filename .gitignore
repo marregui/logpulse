@@ -1,4 +1,5 @@
 .gradle
+buildSrc/.gradle
 build-cache
 build
 gradle
