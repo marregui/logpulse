@@ -53,7 +53,7 @@ public interface PeriodicSchedule<T extends WithUTCTimestamp> {
 
     /**
      * @param ticks a UTC  Epoch representing the concept of application current tick time
-     * @return true if the period is &gt; 0 and <code>'ticks % periodSecs == 0L'</code>
+     * @return true if ticks &gt; 0, the period is &gt; 0 and <code>'ticks % periodSecs == 0L'</code>
      */
     default boolean isInSchedule(long ticks) {
         return isInSchedule(ticks, getPeriodSecs());
@@ -101,10 +101,10 @@ public interface PeriodicSchedule<T extends WithUTCTimestamp> {
     /**
      * @param ticks      UTC  Epoch representing the current application's tick time
      * @param periodSecs period in seconds when the schedule is executed
-     * @return true if the period is &gt; 0 and <code>'ticks % periodSecs == 0L'</code>
+     * @return true if ticks &gt; 0, the period is &gt; 0 and <code>'ticks % periodSecs == 0L'</code>
      */
     static boolean isInSchedule(long ticks, long periodSecs) {
-        return periodSecs > 0L && ticks % periodSecs == 0L;
+        return periodSecs > 0L && ticks > 0L && ticks % periodSecs == 0L;
     }
 
     private static <T extends WithUTCTimestamp> IntStream periodStream(Collection<PeriodicSchedule<T>> schedules) {

@@ -59,7 +59,6 @@ public class GeneralStatsTest {
             long periodEnd = logLines.get(logLines.size() - 1).getUTCTimestamp();
             gs.executeSchedule(periodStart, periodEnd, logLines);
         }
-        System.out.println(baos.toString(StandardCharsets.UTF_8));
         assertThat(baos.toString(StandardCharsets.UTF_8),
                 is("""
                         General HTTP Traffic Statistics

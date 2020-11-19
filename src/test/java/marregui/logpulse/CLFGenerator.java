@@ -17,7 +17,6 @@ package marregui.logpulse;
 
 import marregui.logpulse.clf.CLF;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -103,17 +102,14 @@ public class CLFGenerator implements Iterable<CLF>, Iterator<CLF> {
     }
 
     public static void main(String... args) throws Exception {
-        // circa 150 bytes per log line -> 8.5MB
         long start = System.currentTimeMillis();
         long window = 1000L;
         long delta = 10L;
-        String fileName = "testLogs.log";
-        Path file = Store.resolve(fileName);
-        Files.deleteIfExists(file);
+        Path file = Store.resolve("testLogs.log");
         Store.storeToFileAsync(
                 file,
                 new CLFGenerator(start, window, delta),
-                false,
+                true,
                 0L)
                 .thenRun(() -> System.out.printf(
                         "CLF logs from %s to %s with delta %d: %s",

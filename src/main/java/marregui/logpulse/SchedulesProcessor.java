@@ -103,6 +103,10 @@ public class SchedulesProcessor<T extends WithUTCTimestamp> extends TaskProcesso
         if (!isRunning()) {
             throw new IllegalStateException("not running");
         }
+        boolean cacheHasData = !readoutCache.isEmpty();
+        if (!cacheHasData) {
+            return;
+        }
         schedulesLock.lock();
         try {
             int readyCount = PeriodicSchedule.readyCount(schedules, ticks);
@@ -110,20 +114,17 @@ public class SchedulesProcessor<T extends WithUTCTimestamp> extends TaskProcesso
                 return;
             }
             PeriodicSchedule<T> cacheEvictingSchedule = PeriodicSchedule.scheduleOfLongestPeriod(schedules);
-            boolean cacheHasData = !readoutCache.isEmpty();
-            boolean isEvictTick = cacheHasData && PeriodicSchedule.isInSchedule(ticks, cacheEvictingSchedule.getPeriodSecs());
+            boolean isEvictTick = PeriodicSchedule.isInSchedule(ticks, cacheEvictingSchedule.getPeriodSecs());
             if (isEvictTick) {
                 lastEvictTick = ticks;
             }
-            if (cacheHasData) {
-                long headTs = readoutCache.firstTimestamp();
-                LOGGER.debug("Ready count: {}, tick: {}, evictPeriodSecs: {}, evict: {}, timestamp at head of cache: {}",
-                        Integer.valueOf(readyCount),
-                        Long.valueOf(ticks),
-                        Integer.valueOf(cacheEvictingSchedule.getPeriodSecs()),
-                        Boolean.valueOf(isEvictTick),
-                        UTCTimestamp.formatForDisplay(headTs));
-            }
+            long headTs = readoutCache.firstTimestamp();
+            LOGGER.debug("Ready count: {}, tick: {}, evictPeriodSecs: {}, evict: {}, timestamp at head of cache: {}",
+                    Integer.valueOf(readyCount),
+                    Long.valueOf(ticks),
+                    Integer.valueOf(cacheEvictingSchedule.getPeriodSecs()),
+                    Boolean.valueOf(isEvictTick),
+                    UTCTimestamp.formatForDisplay(headTs));
             for (PeriodicSchedule<T> schedule : schedules) {
                 if (schedule.isInSchedule(ticks)) {
                     long startTs = schedulePeriodStart(schedule,
@@ -132,19 +133,21 @@ public class SchedulesProcessor<T extends WithUTCTimestamp> extends TaskProcesso
                     long endTs = schedulePeriodEnd(schedule, startTs);
                     List<T> scheduleEvents = startTs != ReadoutCache.NO_VALUE ?
                             readoutCache.fetch(startTs, endTs) : Collections.emptyList();
-                    logSchedule(schedule, startTs, endTs, scheduleEvents, ticks);
-                    if (!isRunning()) {
-                        throw new IllegalStateException("not running");
-                    }
-                    processTask(() -> {
-                        long now = System.currentTimeMillis();
-                        long s = startTs != ReadoutCache.NO_VALUE ? startTs : now;
-                        long e = endTs != ReadoutCache.NO_VALUE ? endTs : now;
-                        schedule.executeSchedule(s, e, scheduleEvents);
-                        if (isEvictTick && schedule == cacheEvictingSchedule) {
-                            readoutCache.evict(scheduleEvents.size());
+                    if (!scheduleEvents.isEmpty()) {
+                        logSchedule(schedule, startTs, endTs, scheduleEvents, ticks);
+                        if (!isRunning()) {
+                            throw new IllegalStateException("not running");
                         }
-                    });
+                        processTask(() -> {
+                            long now = System.currentTimeMillis();
+                            long s = startTs != ReadoutCache.NO_VALUE ? startTs : now;
+                            long e = endTs != ReadoutCache.NO_VALUE ? endTs : now;
+                            schedule.executeSchedule(s, e, scheduleEvents);
+                            if (isEvictTick && schedule == cacheEvictingSchedule) {
+                                readoutCache.evict(scheduleEvents.size());
+                            }
+                        });
+                    }
                 }
             }
         } finally {

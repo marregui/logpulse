@@ -44,6 +44,5 @@ public class UTCTimestampTest {
         assertThat(
                 UTCTimestamp.formatForDisplay(ts),
                 is("02/11/2020:10:00:00 +0000 (" + ts + ")"));
-        System.out.println(UTCTimestamp.formatForDisplay(ts).length());
     }
 }

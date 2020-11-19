@@ -98,6 +98,7 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
     private final ReadoutCache<T> readoutCache; // holds event data collected by the fileReadoutHandler
     private final SchedulesProcessor<T> schedulesProcessor;
     private final boolean readFileFromTheStart;
+    private volatile boolean hasSeenData;
     private WatchService watchService;
     private WatchKey watchedFolderKey;
     private Future<?> schedulerThreadHandle;
@@ -216,7 +217,8 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
     @Override
     public void run() {
         LOGGER.info("Starts");
-        long ticks = 1L;
+        long ticks = 0L;
+        hasSeenData = false;
         LOGGER.info("Read file from start: {}", readFileFromTheStart ? "Yes" : "No");
         if (!readFileFromTheStart && fileReadoutHandler.getFileReadOffset() == 0) {
             boolean fileExists = fileReadoutHandler.moveToEnd();
@@ -231,8 +233,12 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
                 if (key != null) {
                     processEvents(key);
                 }
-                maybeWaitToCompleteOneSecond(startTs);
-                if (!readoutCache.isEmpty()) {
+                long elapsed = System.currentTimeMillis() - startTs;
+                if (elapsed < 1000L) {
+                    long wait = 1000L - elapsed;
+                    TimeUnit.MILLISECONDS.sleep(wait);
+                }
+                if (hasSeenData) {
                     schedulesProcessor.processSchedules(ticks);
                     ticks++;
                 }
@@ -253,14 +259,6 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
         stop();
     }
 
-    private static void maybeWaitToCompleteOneSecond(long startTs) throws InterruptedException {
-        long elapsed = System.currentTimeMillis() - startTs;
-        if (elapsed < 1000L) {
-            long wait = 1000L - elapsed - 1L;
-            TimeUnit.MILLISECONDS.sleep(wait);
-        }
-    }
-
     private void processEvents(WatchKey key) {
         try {
             for (WatchEvent<?> event : key.pollEvents()) {
@@ -272,7 +270,7 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
                             try {
                                 readoutCache.fullyEvict();
                                 fileReadoutHandler.moveToStart();
-                                fileReadoutHandler.fetchAvailableLines(readoutCache);
+                                hasSeenData = fileReadoutHandler.fetchAvailableLines(readoutCache) > 0;
                             } catch (IOException e) {
                                 LOGGER.error("Cannot read: " + fileReadoutHandler.getFile(), e);
                             }
@@ -280,10 +278,11 @@ public class Scheduler<T extends WithUTCTimestamp> extends TaskProcessor impleme
                         case ENTRY_DELETE -> {
                             readoutCache.fullyEvict();
                             fileReadoutHandler.moveToStart();
+                            hasSeenData = false;
                         }
                         case ENTRY_MODIFY -> processTask(() -> {
                             try {
-                                fileReadoutHandler.fetchAvailableLines(readoutCache);
+                                hasSeenData = fileReadoutHandler.fetchAvailableLines(readoutCache) > 0;
                             } catch (IOException e) {
                                 LOGGER.error("Cannot read: " + fileReadoutHandler.getFile(), e);
                             }

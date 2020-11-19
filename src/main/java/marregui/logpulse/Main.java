@@ -132,8 +132,6 @@ public class Main {
      * @param args described by passing a single arg equals to (-h, -help)
      */
     public static void main(String[] args) {
-        System.out.println("POLLA: " + System.getProperty("log4j.debug"));
-
         Parameters parameters = Parameters.parseArgs(args);
         Scheduler<CLF> scheduler = new Scheduler<>(new CLFReadoutHandler(parameters.file), false);
         scheduler.setPeriodicSchedule(new GeneralStatsView(System.out));
