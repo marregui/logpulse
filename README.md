@@ -49,7 +49,7 @@ To build the project:        ./gradlew clean build
 The main artefact resulting from the build can be found under: **build/libs/logpulse-1.0-SNAPSHOT-all.jar**,
 an uberjar containing all dependencies so that you may run the application with a command like:
 
-    java -Xmx128m -Dfile.encoding=UTF-8 -Dlog4j.debug=false -jar build/libs/logpulse-1.0-SNAPSHOT-all.jar -help
+    java -Xmx1G -Dfile.encoding=UTF-8 -Dlog4j.debug=false -jar build/libs/logpulse-1.0-SNAPSHOT-all.jar -help
     
 However, use the more convenient launch command: 
 
