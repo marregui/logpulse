@@ -1,0 +1,44 @@
+#!/usr/bin/env sh
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Copyright 2020, Miguel Arregui a.k.a. marregui
+
+die () {
+    echo
+    echo "$*"
+    echo
+    exit 1
+}
+
+CLASSPATH="build/libs/logpulse-1.0-SNAPSHOT-all.jar"
+if [ ! -f $CLASSPATH ]; then
+  die "You have not build the project (cannot find $CLASSPATH).
+Issue command [./gradlew clean build] and try again."
+fi
+
+# Determine the Java command to use to start the JVM
+# ==================================================
+if [ -n "$JAVA_HOME" ]; then
+    JAVA_CMD="$JAVA_HOME/bin/java"
+    if [ ! -x "$JAVA_CMD" ] ; then
+        die "Cannot access: JAVA_HOME folder: $JAVA_HOME
+Please set your JAVA_HOME environment variable to the
+location of your Java installation."
+    fi
+else
+    JAVA_CMD="java"
+    which java >/dev/null 2>&1 || die "JAVA_HOME not set, and your PATH does not contain a 'java' command."
+fi
+
+exec $JAVA_CMD -Xmx128m -Dfile.encoding=UTF-8 -Dlog4j.debug=false -cp $CLASSPATH marregui.logpulse.Main "$@"
