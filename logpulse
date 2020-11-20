@@ -41,4 +41,4 @@ else
     which java >/dev/null 2>&1 || die "JAVA_HOME not set, and your PATH does not contain a 'java' command."
 fi
 
-exec $JAVA_CMD -Xmx1G -Dfile.encoding=UTF-8 -Dlog4j.debug=false -cp $CLASSPATH marregui.logpulse.Main "$@"
+exec $JAVA_CMD -Xmx1G -Dfile.encoding=UTF-8 -cp $CLASSPATH marregui.logpulse.Main "$@"
