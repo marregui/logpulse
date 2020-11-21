@@ -79,3 +79,27 @@ an uberjar containing all dependencies so that you may run the application with 
 However, use the more convenient launch command: 
 
     ./logpulse
+
+The Main class contains:
+
+    
+        public static void main(String[] args) {
+            Parameters parameters = Parameters.parseArgs(args);
+            Scheduler<CLF> scheduler = new Scheduler<>(new CLFReadoutHandler(parameters.file), false);
+            scheduler.setPeriodicSchedule(new GeneralStatsView(System.out));
+            scheduler.setPeriodicSchedule(new HighTrafficGauge(System.out));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    scheduler.stop();
+                } catch (IllegalStateException ignore) {
+                    // it means it is already stopped, likely because
+                    // the parent folder has been deleted
+                }
+            }, "logpulse-shutdown-hook"));
+            scheduler.start();
+        }
+        
+which hints at the use of this project as a framework that gives you
+efficient readout of CLF log files from an ever growing file, and a 
+mechanism to set periodic schedules to act on them.
+        
