@@ -2,12 +2,10 @@
 buildSrc/.gradle
 build-cache
 build
-gradle
-gradlew
-gradlew.bat
 *.iml
 *.ipr
 *.iws
 logpulse-store
 logpulse.log
 .idea
+out/
