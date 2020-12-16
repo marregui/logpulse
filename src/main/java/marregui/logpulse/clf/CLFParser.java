@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse.clf;
 
 import marregui.logpulse.UTCTimestamp;
@@ -202,9 +203,9 @@ public final class CLFParser {
                     throw new IllegalArgumentException(String.format(
                             "parsing [%s] offset:%d, expected:%c, found:%c, logLine: %s",
                             this,
-                            Integer.valueOf(offset),
-                            Character.valueOf(openDelimiter),
-                            Character.valueOf(logLine.charAt(offset)),
+                            offset,
+                            openDelimiter,
+                            logLine.charAt(offset),
                             logLine));
                 }
                 i++;
@@ -220,9 +221,9 @@ public final class CLFParser {
                     throw new IllegalArgumentException(String.format(
                             "parsing [%s] offset:%d, expected:%c, found:%c, logLine:%s",
                             this,
-                            Integer.valueOf(i),
-                            Character.valueOf(closeDelimiter),
-                            Character.valueOf(logLine.charAt(i)),
+                            i,
+                            closeDelimiter,
+                            logLine.charAt(i),
                             logLine));
                 }
             }

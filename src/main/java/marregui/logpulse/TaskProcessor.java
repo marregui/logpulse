@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse;
 
 import org.slf4j.Logger;
@@ -38,7 +39,6 @@ public class TaskProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskProcessor.class);
 
     private final int numThreads;
-    private final AtomicInteger threadId;
     private final ThreadFactory threadFactory;
     private final AtomicInteger runningTasksCount;
     private ExecutorService executor;
@@ -50,17 +50,21 @@ public class TaskProcessor {
      */
     public TaskProcessor(int numThreads, boolean isDaemon) {
         this.numThreads = numThreads;
-        threadId = new AtomicInteger();
-        threadFactory = runnable -> {
-            Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+        threadFactory = newThreadFactory(isDaemon);
+        runningTasksCount = new AtomicInteger();
+    }
+
+    private ThreadFactory newThreadFactory(boolean isDaemon) {
+        AtomicInteger threadId = new AtomicInteger();
+        String threadNamePrefix = getClass().getSimpleName();
+        ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
+        return runnable -> {
+            Thread thread = defaultThreadFactory.newThread(runnable);
             thread.setDaemon(isDaemon);
-            thread.setName(String.format(
-                    "%s%s",
-                    TaskProcessor.this.getClass().getSimpleName(),
-                    Integer.valueOf(threadId.getAndIncrement())));
+            thread.setName(String.format("%s%s",
+                    threadNamePrefix, threadId.getAndIncrement()));
             return thread;
         };
-        runningTasksCount = new AtomicInteger();
     }
 
     /**
@@ -92,9 +96,7 @@ public class TaskProcessor {
             throw new IllegalStateException("already running");
         }
         executor = Executors.newFixedThreadPool(numThreads, threadFactory);
-        LOGGER.info("{} Started [numThreads: {}]",
-                getClass().getSimpleName(),
-                Integer.valueOf(numThreads));
+        LOGGER.info("{} Started [numThreads: {}]", getClass().getSimpleName(), numThreads);
     }
 
     /**

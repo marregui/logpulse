@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse.clf.stats;
 
 import marregui.logpulse.UTCTimestamp;
@@ -105,7 +106,7 @@ public class GeneralStatsView extends GeneralStats {
         sb.append("Count: ").append(count).append(LINE_END);
         sb.append(String.format(
                 "Logs per second: %.2f",
-                Double.valueOf(1.0 * count / getPeriodSecs()))
+                1.0 * count / getPeriodSecs())
         ).append(LINE_END);
     }
 
@@ -138,12 +139,10 @@ public class GeneralStatsView extends GeneralStats {
 
     private static String toHumanReadableSize(double byteCount) {
         if (byteCount < 1024.0) {
-            return String.format("%.2fB", Double.valueOf(byteCount));
+            return String.format("%.2fB", byteCount);
         }
         int step = (int) (log(byteCount) / log(2)) / 10;
         double size = byteCount / (2 << (10 * step - 1));
-        return String.format("%.2f%cB",
-                Double.valueOf(size),
-                Character.valueOf(SCALE[step]));
+        return String.format("%.2f%cB", size, SCALE[step]);
     }
 }

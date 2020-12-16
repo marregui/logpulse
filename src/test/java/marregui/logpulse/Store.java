@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse;
 
 import java.io.BufferedReader;
@@ -104,7 +105,7 @@ public final class Store {
                 count++;
             }
             System.out.printf("Stored %d lines, from: %s, to: %s%n",
-                    Long.valueOf(count),
+                    count,
                     UTCTimestamp.formatForDisplay(startTs),
                     UTCTimestamp.formatForDisplay(endTs));
             return count;

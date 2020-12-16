@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse;
 
 import marregui.logpulse.clf.CLF;
@@ -84,8 +85,8 @@ public class RunControl implements PeriodicSchedule<CLF> {
             assertThat(t, lessThanOrEqualTo(periodSecs));
             linesRead += size;
             bytesRead += events.stream()
-                    .map(clf -> Long.valueOf(clf.getBytes()))
-                    .reduce((a, b) -> Long.valueOf(a + b)).orElse(Long.valueOf(0L));
+                    .map(CLF::getBytes)
+                    .reduce(Long::sum).orElse(0L);
             if (!alarmBytesThresholdCrossed && bytesRead >= alarmBytesThreshold) {
                 alarmBytesThresholdCrossed = true;
                 alarmToGoOff.countDown();

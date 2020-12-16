@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse.clf.stats;
 
 import marregui.logpulse.PeriodicSchedule;
@@ -84,7 +85,7 @@ public class HighTrafficGauge implements PeriodicSchedule<CLF> {
     @Override
     public String getName() {
         return String.format("High Traffic Gauge (%.2f req. per sec.)",
-                Double.valueOf(requestsPerSecOnAvgThreshold));
+                requestsPerSecOnAvgThreshold);
     }
 
     @Override
@@ -139,8 +140,8 @@ public class HighTrafficGauge implements PeriodicSchedule<CLF> {
         return String.format("%s: %s - hits = {%d}, avg: %.2f, triggered: {%s}%n",
                 getName(),
                 message,
-                Integer.valueOf(hits),
-                Double.valueOf(avg),
+                hits,
+                avg,
                 UTCTimestamp.formatForDisplay(ts));
     }
 }

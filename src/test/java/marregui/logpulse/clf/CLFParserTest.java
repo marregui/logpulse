@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse.clf;
 
 import marregui.logpulse.CLFGenerator;

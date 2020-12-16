@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse;
 
 import marregui.logpulse.clf.CLF;
@@ -30,10 +31,10 @@ public class CLFGenerator implements Iterable<CLF>, Iterator<CLF> {
     private static final String[] RESOURCES = Store.loadResourceContents("generator/webroot_structure.txt");
     private static final String[] VERSIONS = {"1.0", "1.1", "2.0"};
     private static final Integer[] STATUS = {
-            Integer.valueOf(200), // success
-            Integer.valueOf(300), // redirection
-            Integer.valueOf(400), // client error
-            Integer.valueOf(500), // server error
+            200, // success
+            300, // redirection
+            400, // client error
+            500, // server error
     };
     private static final int MIN_BYTES = 64;
     private static final int MAX_BYTES = 1024 * 4;
@@ -50,14 +51,11 @@ public class CLFGenerator implements Iterable<CLF>, Iterator<CLF> {
         if (start < 0 || end < 0 || start >= end) {
             throw new IllegalArgumentException(String.format(
                     "invalid range [%d, %d] (window: %d)",
-                    Long.valueOf(start),
-                    Long.valueOf(end),
-                    Long.valueOf(windowMillis)));
+                    start, end, windowMillis));
         }
         if (delta < 0) {
             throw new IllegalArgumentException(String.format(
-                    "invalid delta %d, must be > 0",
-                    Long.valueOf(delta)));
+                    "invalid delta %d, must be > 0", delta));
         }
         this.delta = delta;
         ts = start;
@@ -115,7 +113,7 @@ public class CLFGenerator implements Iterable<CLF>, Iterator<CLF> {
                         "CLF logs from %s to %s with delta %d: %s",
                         UTCTimestamp.format(start),
                         UTCTimestamp.format(start + window),
-                        Long.valueOf(delta),
+                        delta,
                         file)).get();
     }
 }

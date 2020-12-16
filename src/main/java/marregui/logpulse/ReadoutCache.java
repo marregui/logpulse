@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse;
 
 import org.slf4j.Logger;
@@ -147,7 +148,7 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
                 startTs = Math.min(startTs, timestampAt(newEntries, 0));
             } finally {
                 writeLock.unlock();
-                LOGGER.debug("Added {} entries", Integer.valueOf(newEntries.size()));
+                LOGGER.debug("Added {} entries", newEntries.size());
             }
         }
     }
@@ -177,11 +178,11 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
             readLock.unlock();
         }
         LOGGER.debug("Fetch count: {}, from: {} to: {}, startIdx: {}, endIdx (inclusive): {}",
-                Integer.valueOf(cacheLine.size()),
+                cacheLine.size(),
                 UTCTimestamp.formatForDisplay(periodStart),
                 UTCTimestamp.formatForDisplay(periodEnd),
-                Integer.valueOf(startIdx),
-                Integer.valueOf(endIdx));
+                startIdx,
+                endIdx);
         return cacheLine;
 
     }
@@ -228,9 +229,9 @@ public class ReadoutCache<T extends WithUTCTimestamp> {
             writeLock.unlock();
             if (size > 0) {
                 LOGGER.debug("Evicted count: {}, prev. size: {}, current size: {}",
-                        Integer.valueOf(count),
-                        Integer.valueOf(size + count),
-                        Integer.valueOf(size));
+                        count,
+                        size + count,
+                        size);
             } else {
                 LOGGER.debug("Fully evicted");
             }

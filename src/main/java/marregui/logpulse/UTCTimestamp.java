@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse;
 
 import java.text.ParseException;
@@ -25,11 +26,9 @@ import java.util.TimeZone;
  * Utilities type class containing methods to handle timestamps, which
  * internally are converted to a UTC Epoch (a long).
  * <p>
- * The date format is assumed to be:
+ * The timestamps format is assumed to be:
  * <a href="https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/text/SimpleDateFormat.html">dd/MMMM/yyyy:HH:mm:ss Z</a>
  * <p>
- * <b>NOTE</b>: In the future, this class should be abstract, and subclasses should provide
- * file specific date formatting.<br/>
  * <b>NOTE</b>: SimpleDateFormat is not thread safe, so we use two instances (parse and
  * format are called by different threads).
  */
@@ -52,9 +51,9 @@ public final class UTCTimestamp {
     }
 
     /**
-     *
+     * Parses the timestamp and returns the equivalent UTC Epoch
      * @param dateTimeZ in the format "dd/MMMM/yyyy:HH:mm:ss Z"
-     * @return the UTC Epoch representing the dateTime
+     * @return the UTC Epoch equivalent to dateTime
      * @throws ParseException when the format is not followed
      */
     public static long parse(String dateTimeZ) throws ParseException {
@@ -73,7 +72,7 @@ public final class UTCTimestamp {
      * @return formatted with "dd/MMMM/yyyy:HH:mm:ss Z"
      */
     public static String format(long ts) {
-        return DATETIME_OUT.format(Long.valueOf(ts));
+        return DATETIME_OUT.format(ts);
     }
 
     /**

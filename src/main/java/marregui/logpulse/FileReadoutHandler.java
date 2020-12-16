@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse;
 
 import org.slf4j.Logger;
@@ -108,7 +109,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
      */
     public void moveToStart() {
         fileReadOffset = 0L;
-        LOGGER.debug("Moved to start at offset: {}", Long.valueOf(fileReadOffset));
+        LOGGER.debug("Moved to start at offset: {}", fileReadOffset);
     }
 
     /**
@@ -120,7 +121,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
     public boolean moveToEnd() {
         try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), FILE_ACCESS_MODE)) {
             fileReadOffset = raf.length();
-            LOGGER.debug("Moved to end at offset: {}", Long.valueOf(fileReadOffset));
+            LOGGER.debug("Moved to end at offset: {}", fileReadOffset);
             return true;
         } catch (IOException e) {
             fileReadOffset = 0L;
@@ -176,7 +177,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
             MappedByteBuffer mappedBuffer = channel.map(MapMode.READ_ONLY, fileReadOffset, bufferSize);
             int lineStartOffset = 0;
             LOGGER.debug("Reading {} additional bytes from offset {}",
-                    Long.valueOf(bufferSize), Long.valueOf(fileReadOffset));
+                    bufferSize, fileReadOffset);
             for (int i = 0; i < mappedBuffer.limit(); i++) {
                 if (mappedBuffer.get(i) == LINE_BREAK) {
                     if (lineStartOffset != i) {
@@ -184,8 +185,8 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
                         if (lineLength > lineBuffer.length) {
                             int newLineBufferSize = (int) Math.ceil(lineLength * 1.5f);
                             LOGGER.debug("Resizing buffer from {} to {}",
-                                    Integer.valueOf(lineBuffer.length),
-                                    Integer.valueOf(newLineBufferSize));
+                                    lineBuffer.length,
+                                    newLineBufferSize);
                             lineBuffer = new byte[newLineBufferSize];
                         }
                         mappedBuffer.position(lineStartOffset);
@@ -205,7 +206,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
                             }
                         } catch (Exception e) {
                             LOGGER.warn("Ignoring malformed line found at offset {}: {}",
-                                    Long.valueOf(fileReadOffset + lineStartOffset), line);
+                                    fileReadOffset + lineStartOffset, line);
                         }
                     }
                     lineStartOffset = i + 1;
@@ -216,7 +217,7 @@ public abstract class FileReadoutHandler<LINE_TYPE extends WithUTCTimestamp> {
             throw new IllegalStateException("cannot access file: " + file, e);
         }
         if (addedLinesCount > 0) {
-            LOGGER.debug("Loaded count: {}", Integer.valueOf(addedLinesCount));
+            LOGGER.debug("Loaded count: {}", addedLinesCount);
         }
         return addedLinesCount;
     }

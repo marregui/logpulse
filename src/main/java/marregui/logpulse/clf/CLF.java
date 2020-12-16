@@ -13,6 +13,7 @@
  *
  * Copyright 2020, Miguel Arregui a.k.a. marregui
  */
+
 package marregui.logpulse.clf;
 
 import marregui.logpulse.WithUTCTimestamp;
@@ -202,8 +203,8 @@ public class CLF implements WithUTCTimestamp {
                 host, ident, authUser,
                 UTCTimestamp.format(timestamp),
                 method, resource, version,
-                Integer.valueOf(status),
-                Long.valueOf(bytes));
+                status,
+                bytes);
     }
 
     /**
