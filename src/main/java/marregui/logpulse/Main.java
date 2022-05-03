@@ -35,6 +35,7 @@ public class Main {
         int trafficGaugePeriod = HighTrafficGauge.DEFAULT_PERIOD_SECS;
         double trafficGaugeThreshold = HighTrafficGauge.DEFAULT_REQUESTS_PER_SECOND_THRESHOLD;
         Path file = Paths.get("/tmp/access.log");
+
         static Parameters parseArgs(String[] args) {
             if (args.length == 1 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
                 usage();
@@ -52,14 +53,10 @@ public class Main {
                 String val = args[i + 1];
                 try {
                     switch (key) {
-                        case "-f", "-file", "-in" ->
-                                parameters.file = Paths.get(val);
-                        case "-gsp", "-generalStatsPeriod" ->
-                                parameters.generalStatsPeriod = Integer.parseInt(val);
-                        case "-tgp", "-trafficGaugePeriod" ->
-                                parameters.trafficGaugePeriod = Integer.parseInt(val);
-                        case "-tgt", "-trafficGaugeThreshold" ->
-                                parameters.trafficGaugeThreshold = Double.parseDouble(val);
+                        case "-f", "-file", "-in" -> parameters.file = Paths.get(val);
+                        case "-gsp", "-generalStatsPeriod" -> parameters.generalStatsPeriod = Integer.parseInt(val);
+                        case "-tgp", "-trafficGaugePeriod" -> parameters.trafficGaugePeriod = Integer.parseInt(val);
+                        case "-tgt", "-trafficGaugeThreshold" -> parameters.trafficGaugeThreshold = Double.parseDouble(val);
                         case "-h", "-help" -> {
                             System.err.println("Help command should stand on its own");
                             usage();
@@ -80,7 +77,7 @@ public class Main {
 
         static void usage() {
             System.out.println("""
-                    
+                                        
                     LogPulse
                     ~~~~~~~~
                     LogPulse is a command line utility that can be used to monitor a file, '/tmp/access.log' by default, 

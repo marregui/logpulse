@@ -17,12 +17,12 @@
 
 object Versions {
     // logging
-    const val slf4jApi = "1.7.30"
+    const val slf4jApi = "2.0.0-alpha7"
 
     // testing
-    const val junitJupiter = "5.6.2"
+    const val junitJupiter = "5.8.2"
     const val hamcrest = "2.2"
-    const val mockitoCore = "3.5.10"
+    const val mockitoCore = "4.5.1"
 }
 
 object Libs {

@@ -65,7 +65,7 @@ Available parameter keys:
 
 # For development
 
-_Requirements_: **JDK15**, **Gradle (preferably 6.x.x, we use 6.7)** are required.
+_Requirements_: **JDK17**, **Gradle (preferably 7.x.x, we use 7.4.2)** are required.
 
 To create the documentation: ./gradlew javadoc
 

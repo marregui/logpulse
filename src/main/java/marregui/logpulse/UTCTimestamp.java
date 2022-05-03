@@ -27,7 +27,7 @@ import java.util.TimeZone;
  * internally are converted to a UTC Epoch (a long).
  * <p>
  * The timestamps format is assumed to be:
- * <a href="https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/text/SimpleDateFormat.html">dd/MMMM/yyyy:HH:mm:ss Z</a>
+ * <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/text/SimpleDateFormat.html">dd/MMMM/yyyy:HH:mm:ss Z</a>
  * <p>
  * <b>NOTE</b>: SimpleDateFormat is not thread safe, so we use two instances (parse and
  * format are called by different threads).
